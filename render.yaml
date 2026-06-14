@@ -1,0 +1,41 @@
+# Render blueprint for the TASAP API + PostgreSQL (spec §10.1).
+# The Next.js frontend deploys separately on Vercel (spec §10.2).
+#
+# Set manually in the Render dashboard (not here, for security):
+#   SUPABASE_URL, SUPABASE_SERVICE_KEY, SUPABASE_BUCKET,
+#   CORS_ORIGINS (the Vercel URL), APP_BASE_URL (this service's URL)
+
+services:
+  - type: web
+    name: tasap-api
+    runtime: python
+    rootDir: backend
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    preDeployCommand: alembic upgrade head
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tasap-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: CORS_ORIGINS
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        sync: false
+
+databases:
+  # Starter plan (upgrade from free — the free tier expires after 90 days).
+  - name: tasap-db
+    plan: starter
