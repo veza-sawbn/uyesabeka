@@ -79,7 +79,12 @@ export default async function LearnerDetailPage({ params }: { params: Promise<{ 
       <PageHeader
         title={learner.full_name}
         subtitle={`${learner.site_name ?? "No site"} · ${learner.programme_name ?? "No programme"}`}
-        actions={<Btn href="/learners" icon="arrow-left">Back to learners</Btn>}
+        actions={
+          <div style={{ display: "flex", gap: 8 }}>
+            {canManage && <Btn href={`/learners/${learner.id}/edit`} icon="edit">Edit profile</Btn>}
+            <Btn href="/learners" icon="arrow-left">Back to learners</Btn>
+          </div>
+        }
       />
       <PageContent>
         <div className="detail-grid">

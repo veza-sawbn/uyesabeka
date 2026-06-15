@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.config import settings
-from app.routers import attendance, auth, dashboard, learners, providers, sites, stipends
+from app.routers import attendance, auth, dashboard, learners, providers, sites, stipends, users
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
@@ -34,6 +34,7 @@ app.include_router(dashboard.router)
 app.include_router(stipends.router)
 app.include_router(sites.router)
 app.include_router(providers.router)
+app.include_router(users.router)
 
 
 @app.get("/health", tags=["health"])

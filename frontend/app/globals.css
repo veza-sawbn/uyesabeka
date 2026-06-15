@@ -1001,6 +1001,10 @@ table.data tbody tr:hover {
   }
 }
 
+.tab-bar {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
@@ -1011,6 +1015,7 @@ table.data tbody tr:hover {
   }
   .main-area {
     margin-left: 0;
+    padding-bottom: 56px;
   }
   .stat-grid {
     grid-template-columns: 1fr 1fr;
@@ -1020,5 +1025,36 @@ table.data tbody tr:hover {
   }
   .fab {
     display: flex;
+  }
+  .tab-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: var(--charcoal);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 45;
+  }
+  .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.42);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .tab-item i {
+    font-size: 18px;
+  }
+  .tab-item.active {
+    color: var(--amber);
   }
 }

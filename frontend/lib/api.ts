@@ -5,6 +5,7 @@
 import { cookies } from "next/headers";
 
 import type {
+  AdminUser,
   Alert,
   Attendance,
   DashboardStats,
@@ -151,11 +152,20 @@ export const api = {
   },
   sites: {
     list: () => request<Site[]>("GET", "/api/v1/sites"),
+    create: (body: unknown) => request<Site>("POST", "/api/v1/sites", { body }),
   },
   programmes: {
     list: () => request<Programme[]>("GET", "/api/v1/programmes"),
+    create: (body: unknown) => request<Programme>("POST", "/api/v1/programmes", { body }),
   },
   providers: {
     list: () => request<Provider[]>("GET", "/api/v1/providers"),
+    create: (body: unknown) => request<Provider>("POST", "/api/v1/providers", { body }),
+  },
+  users: {
+    list: () => request<AdminUser[]>("GET", "/api/v1/users"),
+    create: (body: unknown) => request<AdminUser>("POST", "/api/v1/users", { body }),
+    update: (id: number, body: unknown) => request<AdminUser>("PUT", `/api/v1/users/${id}`, { body }),
+    remove: (id: number) => request<{ detail: string }>("DELETE", `/api/v1/users/${id}`),
   },
 };

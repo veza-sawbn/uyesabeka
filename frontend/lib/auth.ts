@@ -52,3 +52,20 @@ export const NAV_VISIBILITY: Record<string, Role[]> = {
 export function canSee(item: string, role: Role): boolean {
   return NAV_VISIBILITY[item]?.includes(role) ?? false;
 }
+
+// Roles that operate across all providers rather than being scoped to one
+// (mirrors backend app/deps.py is_cross_provider).
+export function isCrossProviderRole(role: Role): boolean {
+  return role === "super_admin" || role === "auditor";
+}
+
+// Mirrors backend app/models/enums.py Role.ALL.
+export const ALL_ROLES: Role[] = [
+  "super_admin",
+  "auditor",
+  "provider_admin",
+  "provider_verifier",
+  "provider_payroll",
+  "mentor",
+  "learner",
+];

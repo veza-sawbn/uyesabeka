@@ -36,5 +36,9 @@ export const config = {
     "/learners/:path*",
     "/attendance/:path*",
     "/stipends/:path*",
+    "/programmes/:path*",
+    "/sites/:path*",
+    "/providers/:path*",
+    "/admin/:path*",
   ],
 };

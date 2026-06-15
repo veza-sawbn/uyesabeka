@@ -206,3 +206,13 @@ export interface Provider {
   registration_number: string | null;
   contact_email: string | null;
 }
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  full_name: string | null;
+  role: Role;
+  provider_id: number | null;
+  site_id: number | null;
+  learner_id: number | null;
+}

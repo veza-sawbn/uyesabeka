@@ -35,10 +35,24 @@ class ProgrammeOut(BaseModel):
     end_date: date | None = None
 
 
+class ProgrammeCreate(BaseModel):
+    name: str
+    sector: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    provider_id: int | None = None
+
+
 class ProviderOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    name: str
+    registration_number: str | None = None
+    contact_email: str | None = None
+
+
+class ProviderCreate(BaseModel):
     name: str
     registration_number: str | None = None
     contact_email: str | None = None

@@ -29,6 +29,27 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
       { key: "stipends", href: "/stipends", label: "Stipends", icon: "coin" },
     ],
   },
+  {
+    label: "Organisation",
+    items: [
+      { key: "programmes", href: "/programmes", label: "Programmes", icon: "book" },
+      { key: "sites", href: "/sites", label: "Sites", icon: "building" },
+      { key: "providers", href: "/providers", label: "Providers", icon: "building-community" },
+    ],
+  },
+  {
+    label: "Admin",
+    items: [{ key: "admin", href: "/admin", label: "Users", icon: "shield-lock" }],
+  },
+];
+
+// Top-level items shown in the mobile bottom tab bar (spec §9.3). Anything
+// else remains reachable via "More", which opens the full sidebar.
+const TAB_BAR_ITEMS: NavItem[] = [
+  { key: "dashboard", href: "/dashboard", label: "Home", icon: "layout-dashboard" },
+  { key: "learners", href: "/learners", label: "Learners", icon: "users" },
+  { key: "attendance", href: "/attendance", label: "Attendance", icon: "clock" },
+  { key: "stipends", href: "/stipends", label: "Stipends", icon: "coin" },
 ];
 
 export default function SideNav({ user }: { user: User }) {
@@ -93,6 +114,31 @@ export default function SideNav({ user }: { user: User }) {
           </form>
         </div>
       </aside>
+
+      <nav className="tab-bar" aria-label="Primary">
+        {TAB_BAR_ITEMS.filter((item) => canSee(item.key, user.role)).map((item) => {
+          const active = pathname === item.href || pathname.startsWith(item.href + "/");
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={`tab-item ${active ? "active" : ""}`}
+              onClick={() => setOpen(false)}
+            >
+              <i className={`ti ti-${item.icon}`} aria-hidden />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+        <button
+          type="button"
+          className={`tab-item ${open ? "active" : ""}`}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <i className="ti ti-menu-2" aria-hidden />
+          <span>More</span>
+        </button>
+      </nav>
     </>
   );
 }

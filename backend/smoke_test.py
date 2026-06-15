@@ -131,9 +131,17 @@ for l in site_learners:
         break
 check("mentor check-in inside geofence", checked_in is not None and checked_in["geofence_result"] == "inside")
 
-# Outside geofence requires override.
+# Outside geofence requires override. Pick a learner with no record today so the
+# geofence path is exercised rather than the "already checked in" (409) guard —
+# the seed pre-populates today's attendance for most active learners.
 if site_learners:
-    far_learner = next((l for l in site_learners if checked_in is None or l["id"] != checked_in["learner_id"]), None)
+    today_iso = today.isoformat()
+    todays = client.get(
+        f"/api/v1/attendance?date_from={today_iso}&date_to={today_iso}&page_size=200",
+        headers=admin_h,
+    ).json()["items"]
+    has_record = {a["learner_id"] for a in todays}
+    far_learner = next((l for l in site_learners if l["id"] not in has_record), None)
     if far_learner:
         r = client.post("/api/v1/attendance/check-in", headers=mentor_h, json={
             "learner_id": far_learner["id"], "latitude": 0.0, "longitude": 0.0})

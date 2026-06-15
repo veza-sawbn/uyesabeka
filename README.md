@@ -177,13 +177,18 @@ cd frontend && npm run typecheck && npm run build
 | 2 | Frontend login + sidebar + topbar shell + dashboard layout | ✅ |
 | 3 | Attendance API + Supabase signature upload | ✅ (storage offline = demo mode) |
 | 4 | Dashboard: stat cards + heatmap + learner register (in-place check-in) | ✅ |
-| 5 | Learners list + detail (+ create) | ✅ (edit-profile form: TODO) |
+| 5 | Learners list + detail (+ create + edit) | ✅ |
 | 6 | Attendance table + bulk verify | ✅ |
 | 7 | Stipend batch calculation + CSV export | ✅ |
-| 8 | Mobile responsiveness + site rail live polling | ✅ polling; FAB + breakpoints in place |
+| 8 | Mobile responsiveness + site rail live polling | ✅ polling, FAB, breakpoints + bottom tab bar |
 | 9 | Auditor cross-provider read-only views | ✅ |
 | 10 | POPIA: ID masking, signed-URL expiry, data export | ✅ |
 
-**Known follow-ups:** dedicated Programmes / Sites / Providers / Admin pages
-(APIs exist; the sidebar currently links the four core modules), a learner
-edit-profile form, and the mobile bottom-tab-bar variant of the sidebar.
+**Organisation & admin modules:** dedicated Programmes, Sites, Providers and
+Admin (Users) pages are wired to their backend APIs. Programmes and Sites are
+provider-scoped (provider_admin+ can create); Providers is visible to
+auditor/super_admin and creatable by super_admin; the Admin module is
+super_admin-only with full user create / edit / delete. Each page is gated both
+in the sidebar (`canSee`) and by an in-page role guard, and at the edge via
+middleware. The learner edit-profile form and the mobile bottom-tab-bar nav
+(< 768px) are also in place.
