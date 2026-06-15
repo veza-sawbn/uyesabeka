@@ -33,7 +33,16 @@ export default async function DashboardPage({
   ]);
 
   // Resolve the register's site: explicit ?site, else the user's primary, else first.
-  const selectedSiteId = sp.site ? Number(sp.site) : (user.site_id ?? sites[0]?.id ?? null);
+  let selectedSiteId = sp.site ? Number(sp.site) : (user.site_id ?? sites[0]?.id ?? null);
+
+  // A learner's register must always be their own site, regardless of which
+  // site happens to be first in the provider's list.
+  if (user.role === "learner") {
+    const self = await api.learners.list({ status: "active", page_size: 1 });
+    const ownSiteId = self.items[0]?.site_id;
+    if (ownSiteId) selectedSiteId = ownSiteId;
+  }
+
   const selectedSite = sites.find((s) => s.id === selectedSiteId) ?? sites[0] ?? null;
 
   let register: RegisterItem[] = [];
