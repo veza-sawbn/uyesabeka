@@ -22,6 +22,10 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
   const canVerify =
     user.role === "provider_verifier" || user.role === "provider_admin" || user.role === "super_admin";
 
+  // Only these roles can call POST /attendance/check-in (app/routers/attendance.py).
+  const canCheckIn =
+    user.role === "mentor" || user.role === "provider_admin" || user.role === "super_admin" || user.role === "learner";
+
   const [data, sites] = await Promise.all([
     api.attendance.list({
       page,
@@ -49,9 +53,11 @@ export default async function AttendancePage({ searchParams }: { searchParams: P
         title="Attendance"
         subtitle={formatLongDate(new Date())}
         actions={
-          <Btn href="/dashboard" variant="primary" icon="clock-plus">
-            Record check-in
-          </Btn>
+          canCheckIn && (
+            <Btn href="/dashboard#today-register" variant="primary" icon="clock-plus">
+              Record check-in
+            </Btn>
+          )
         }
       />
       <PageContent>

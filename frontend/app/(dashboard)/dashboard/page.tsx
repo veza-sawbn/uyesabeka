@@ -74,15 +74,22 @@ export default async function DashboardPage({
 
   const showSiteSelector = sites.length > 1 && user.role !== "mentor" && user.role !== "learner";
 
+  // Only these roles can call POST /attendance/check-in (app/routers/attendance.py).
+  const canCheckIn =
+    register.length > 0 &&
+    (user.role === "mentor" || user.role === "provider_admin" || user.role === "super_admin" || user.role === "learner");
+
   return (
     <>
       <PageHeader
         title="Dashboard"
         subtitle={formatLongDate(today)}
         actions={
-          <Btn href="/attendance" variant="primary" icon="clock-check">
-            Record attendance
-          </Btn>
+          canCheckIn && (
+            <Btn href="#today-register" variant="primary" icon="clock-check">
+              Record attendance
+            </Btn>
+          )
         }
       />
       <PageContent>

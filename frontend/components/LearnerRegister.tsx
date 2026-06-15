@@ -140,7 +140,7 @@ export default function LearnerRegister({ items }: { items: RegisterItem[] }) {
   }
 
   return (
-    <div className="card detail-section" style={{ display: "flex", flexDirection: "column" }}>
+    <div id="today-register" className="card detail-section" style={{ display: "flex", flexDirection: "column" }}>
       <div className="card-title" style={{ marginBottom: 10 }}>
         Today&apos;s register
       </div>
