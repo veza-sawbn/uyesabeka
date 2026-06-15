@@ -38,6 +38,7 @@ services:
         sync: false
 
 databases:
-  # Starter plan (upgrade from free — the free tier expires after 90 days).
+  # Render retired the legacy starter/free Postgres plans — basic-256mb is
+  # the smallest current paid tier.
   - name: tasap-db
-    plan: starter
+    plan: basic-256mb
