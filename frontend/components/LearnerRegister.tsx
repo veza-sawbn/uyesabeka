@@ -7,6 +7,7 @@ import { checkInLearner } from "@/app/(dashboard)/actions";
 import { initials } from "@/lib/auth";
 import { formatTime } from "@/lib/format";
 import type { GeofenceResult, RegisterItem, VerificationStatus } from "@/lib/types";
+import SignaturePad, { type SignaturePadHandle } from "./SignaturePad";
 
 interface CardState {
   checked_in: boolean;
@@ -15,6 +16,7 @@ interface CardState {
   verification: VerificationStatus | null;
   busy: boolean;
   needsOverride: boolean;
+  pendingSignature: string | null;
   error: string | null;
 }
 
@@ -56,11 +58,16 @@ export default function LearnerRegister({ items }: { items: RegisterItem[] }) {
           verification: it.verification,
           busy: false,
           needsOverride: false,
+          pendingSignature: null,
           error: null,
         } as CardState,
       ]),
     ),
   );
+  const [signingId, setSigningId] = useState<number | null>(null);
+  const [padError, setPadError] = useState<string | null>(null);
+  const padRef = useRef<SignaturePadHandle>(null);
+  const signingItem = items.find((it) => it.learner_id === signingId) ?? null;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -70,7 +77,7 @@ export default function LearnerRegister({ items }: { items: RegisterItem[] }) {
     );
   }, [items, search]);
 
-  async function handleCheckIn(item: RegisterItem, override: boolean) {
+  async function handleCheckIn(item: RegisterItem, override: boolean, signatureData: string | null) {
     setState((s) => ({ ...s, [item.learner_id]: { ...s[item.learner_id], busy: true, error: null } }));
     const pos = await getPosition(item);
     const res = await checkInLearner({
@@ -78,6 +85,7 @@ export default function LearnerRegister({ items }: { items: RegisterItem[] }) {
       latitude: pos.latitude,
       longitude: pos.longitude,
       override,
+      signature_data: signatureData ?? undefined,
     });
     setState((s) => {
       const prev = s[item.learner_id];
@@ -92,6 +100,7 @@ export default function LearnerRegister({ items }: { items: RegisterItem[] }) {
             geofence: res.data.geofence_result,
             verification: res.data.verification_status,
             needsOverride: false,
+            pendingSignature: null,
             error: null,
           },
         };
@@ -103,10 +112,28 @@ export default function LearnerRegister({ items }: { items: RegisterItem[] }) {
           ...prev,
           busy: false,
           needsOverride: outside,
+          pendingSignature: outside ? signatureData : null,
           error: outside ? null : res.error,
         },
       };
     });
+    setSigningId(null);
+  }
+
+  function openSignaturePad(item: RegisterItem) {
+    setPadError(null);
+    setSigningId(item.learner_id);
+  }
+
+  function handleConfirmSign(override: boolean) {
+    if (!signingItem) return;
+    const dataUrl = padRef.current?.toDataURL() ?? null;
+    if (!dataUrl) {
+      setPadError("Please sign before confirming.");
+      return;
+    }
+    setPadError(null);
+    void handleCheckIn(signingItem, override, dataUrl);
   }
 
   function renderCta(item: RegisterItem, cs: CardState) {
@@ -127,13 +154,17 @@ export default function LearnerRegister({ items }: { items: RegisterItem[] }) {
     }
     if (cs.needsOverride) {
       return (
-        <button className="btn-override" disabled={cs.busy} onClick={() => handleCheckIn(item, true)}>
+        <button
+          className="btn-override"
+          disabled={cs.busy}
+          onClick={() => handleCheckIn(item, true, cs.pendingSignature)}
+        >
           {cs.busy ? "…" : "Override"}
         </button>
       );
     }
     return (
-      <button className="btn-checkin" disabled={cs.busy} onClick={() => handleCheckIn(item, false)}>
+      <button className="btn-checkin" disabled={cs.busy} onClick={() => openSignaturePad(item)}>
         {cs.busy ? "…" : "Check in"}
       </button>
     );
@@ -186,6 +217,34 @@ export default function LearnerRegister({ items }: { items: RegisterItem[] }) {
       <button className="fab" aria-label="Check in" onClick={() => searchRef.current?.focus()}>
         <i className="ti ti-clock-plus" />
       </button>
+
+      {signingItem && (
+        <div className="signature-modal-backdrop" onClick={() => setSigningId(null)}>
+          <div className="signature-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="signature-modal-title">Sign to confirm check-in</div>
+            <div className="signature-modal-name">{signingItem.name}</div>
+            <SignaturePad key={signingItem.learner_id} ref={padRef} />
+            <div className="signature-hint">Sign with your finger or mouse above</div>
+            {padError && <div className="signature-error">{padError}</div>}
+            <div className="signature-actions">
+              <button className="btn btn-ghost" type="button" onClick={() => padRef.current?.clear()}>
+                Clear
+              </button>
+              <button className="btn btn-ghost" type="button" onClick={() => setSigningId(null)}>
+                Cancel
+              </button>
+              <button
+                className="btn-checkin"
+                type="button"
+                disabled={state[signingItem.learner_id]?.busy}
+                onClick={() => handleConfirmSign(false)}
+              >
+                {state[signingItem.learner_id]?.busy ? "…" : "Confirm check-in"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
