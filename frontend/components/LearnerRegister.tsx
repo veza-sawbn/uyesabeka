@@ -3,10 +3,9 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { checkInLearner } from "@/app/(dashboard)/actions";
 import { initials } from "@/lib/auth";
 import { formatTime } from "@/lib/format";
-import type { GeofenceResult, RegisterItem, VerificationStatus } from "@/lib/types";
+import type { Attendance, GeofenceResult, RegisterItem, VerificationStatus } from "@/lib/types";
 import SignaturePad, { type SignaturePadHandle } from "./SignaturePad";
 
 interface CardState {
@@ -69,6 +68,34 @@ export default function LearnerRegister({ items }: { items: RegisterItem[] }) {
   const padRef = useRef<SignaturePadHandle>(null);
   const signingItem = items.find((it) => it.learner_id === signingId) ?? null;
 
+  async function callCheckIn(input: {
+    learner_id: number;
+    latitude: number;
+    longitude: number;
+    override: boolean;
+    signature_data?: string;
+  }): Promise<{ ok: true; data: Attendance } | { ok: false; error: string }> {
+    try {
+      const res = await fetch("/api/attendance/check-in", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const msg = typeof data?.detail === "string"
+          ? data.detail
+          : Array.isArray(data?.detail)
+            ? (data.detail as Array<{ msg?: string }>).map((d) => d.msg).join(", ")
+            : "Check-in failed";
+        return { ok: false, error: msg };
+      }
+      return { ok: true, data: data as Attendance };
+    } catch {
+      return { ok: false, error: "Network error — please try again." };
+    }
+  }
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return items;
@@ -80,43 +107,42 @@ export default function LearnerRegister({ items }: { items: RegisterItem[] }) {
   async function handleCheckIn(item: RegisterItem, override: boolean, signatureData: string | null) {
     setState((s) => ({ ...s, [item.learner_id]: { ...s[item.learner_id], busy: true, error: null } }));
     const pos = await getPosition(item);
-    const res = await checkInLearner({
+    const res = await callCheckIn({
       learner_id: item.learner_id,
       latitude: pos.latitude,
       longitude: pos.longitude,
       override,
       signature_data: signatureData ?? undefined,
     });
-    setState((s) => {
-      const prev = s[item.learner_id];
-      if (res.ok) {
-        return {
-          ...s,
-          [item.learner_id]: {
-            ...prev,
-            busy: false,
-            checked_in: true,
-            check_in_time: res.data.check_in_time,
-            geofence: res.data.geofence_result,
-            verification: res.data.verification_status,
-            needsOverride: false,
-            pendingSignature: null,
-            error: null,
-          },
-        };
-      }
-      const outside = /override/i.test(res.error);
-      return {
+    if (res.ok) {
+      setState((s) => ({
         ...s,
         [item.learner_id]: {
-          ...prev,
+          ...s[item.learner_id],
+          busy: false,
+          checked_in: true,
+          check_in_time: res.data.check_in_time,
+          geofence: res.data.geofence_result,
+          verification: res.data.verification_status,
+          needsOverride: false,
+          pendingSignature: null,
+          error: null,
+        },
+      }));
+      router.refresh();
+    } else {
+      const outside = /override/i.test(res.error);
+      setState((s) => ({
+        ...s,
+        [item.learner_id]: {
+          ...s[item.learner_id],
           busy: false,
           needsOverride: outside,
           pendingSignature: outside ? signatureData : null,
           error: outside ? null : res.error,
         },
-      };
-    });
+      }));
+    }
     setSigningId(null);
   }
 
